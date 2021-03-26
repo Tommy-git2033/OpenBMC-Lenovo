@@ -13,6 +13,10 @@ LED_MGR_PACKAGES = " \
     ${PN}-faultmonitor \
 "
 
+PACKAGECONFIG ??= ""
+PACKAGECONFIG[use-json] = "--enable-use-json, --disable-use-json"
+PACKAGECONFIG[use-lamp-test] = "--enable-use-lamp-test, --disable-use-lamp-test"
+
 PACKAGE_BEFORE_PN += "${LED_MGR_PACKAGES}"
 ALLOW_EMPTY_${PN} = "1"
 
