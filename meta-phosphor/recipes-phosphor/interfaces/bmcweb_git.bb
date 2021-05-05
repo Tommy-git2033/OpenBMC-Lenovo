@@ -13,7 +13,7 @@ LIC_FILES_CHKSUM = "file://LICENCE;md5=a6a4edad4aed50f39a66d098d74b265b"
 SRC_URI = "git://github.com/openbmc/bmcweb.git"
 
 PV = "1.0+git${SRCPV}"
-SRCREV = "4df1bee0bdc9d71043b51872875d3d22b26ab68f"
+SRCREV = "ffed87b5ad1797ca966d030e7f97977028d258fa"
 
 S = "${WORKDIR}/git"
 
@@ -44,7 +44,7 @@ RDEPENDS_${PN} += " \
 
 do_install_ptest() {
         install -d ${D}${PTEST_PATH}/test
-        cp -rf ${B}*_test ${D}${PTEST_PATH}/test/
+        cp -rf ${B}/*_test ${D}${PTEST_PATH}/test/
 }
 
 FILES_${PN} += "${datadir}/** "

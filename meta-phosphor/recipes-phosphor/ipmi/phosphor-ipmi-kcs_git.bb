@@ -12,8 +12,8 @@ PV = "1.0+git${SRCPV}"
 
 KCS_DEVICE ?= "ipmi-kcs3"
 
-SYSTEMD_SERVICE_${PN} = " ${PN}@${KCS_DEVICE}.service "
-FILES_${PN} += " ${systemd_system_unitdir}/${PN}@.service "
+SYSTEMD_SERVICE_${PN} = "${PN}@${KCS_DEVICE}.service"
+FILES_${PN} += "${systemd_system_unitdir}/${PN}@.service"
 
 PROVIDES += "virtual/obmc-host-ipmi-hw"
 RPROVIDES_${PN} += "virtual-obmc-host-ipmi-hw"
@@ -30,4 +30,4 @@ DEPENDS += " \
 
 S = "${WORKDIR}/git"
 SRC_URI = "git://github.com/openbmc/kcsbridge.git"
-SRCREV = "4a4d1d03d99fabe089e649aa226ad4c61e71684e"
+SRCREV = "3b170152ddc967f270939f4c351be987c451f0ca"

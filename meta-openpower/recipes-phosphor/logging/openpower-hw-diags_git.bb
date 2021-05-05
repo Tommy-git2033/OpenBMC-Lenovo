@@ -16,7 +16,7 @@ inherit meson systemd
 S = "${WORKDIR}/git"
 
 SRC_URI = "git://github.com/openbmc/openpower-hw-diags"
-SRCREV = "982f172262693198f649d4d8918e5defb1ff6c9c"
+SRCREV = "eea45427d3c5976f1922711cf01a0e25ca193993"
 
 SYSTEMD_SERVICE_${PN} = "attn_handler.service"
 
@@ -25,3 +25,8 @@ DEPENDS = "boost libgpiod pdbg phosphor-logging sdbusplus openpower-libhei \
 
 # This is required so that libhei is installed with the chip data files.
 RDEPENDS_${PN} += "openpower-libhei"
+
+# Conditionally pull in PHAL APIs, if available.
+PACKAGECONFIG ??= "${@bb.utils.filter('OBMC_MACHINE_FEATURES', 'phal', d)}"
+PACKAGECONFIG[phal] = "-Dphal=enabled, -Dphal=disabled, pdata"
+
