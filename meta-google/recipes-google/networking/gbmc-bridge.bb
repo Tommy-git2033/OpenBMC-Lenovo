@@ -61,9 +61,8 @@ do_install() {
   install -d -m0755 $netdir
 
   if [ ! -z "${GBMC_BR_MAC_ADDR}" ]; then
-    local addr=
-    addr+='Address=fe80::${@mac_to_eui64(GBMC_BR_MAC_ADDR)}/64\n'
-    addr+='Address=${GBMC_ULA_PREFIX}:${@mac_to_eui64(GBMC_BR_MAC_ADDR)}/64'
+    sfx='${@mac_to_eui64(GBMC_BR_MAC_ADDR)}'
+    addr="Address=${GBMC_ULA_PREFIX}:$sfx/64\nAddress=fe80::$sfx/64"
     sed -i "s,@ADDR@,$addr," ${WORKDIR}/-bmc-gbmcbr.network.in
   else
     sed -i '/@ADDR@/d' ${WORKDIR}/-bmc-gbmcbr.network.in
@@ -97,4 +96,10 @@ do_install() {
   install -m0755 ${WORKDIR}/gbmc-br-ensure-ra.sh ${D}${libexecdir}/
   install -d -m0755 ${D}${systemd_system_unitdir}
   install -m0755 ${WORKDIR}/gbmc-br-ensure-ra.service ${D}${systemd_system_unitdir}/
+}
+
+do_rm_work_prepend() {
+  # HACK: Work around broken do_rm_work not properly calling rm with `--`
+  # It doesn't like filenames that start with `-`
+  rm -rf -- ${WORKDIR}/-*
 }
