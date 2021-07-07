@@ -42,7 +42,7 @@ USERADD_PACKAGES = "${PN}-base"
 GROUPADD_PARAM_${PN}-base = "-r phosphor-logging"
 
 FILES_${PN}-base += " \
-        ${sysconfdir}/dbus-1 \
+        ${datadir}/dbus-1 \
         ${bindir}/phosphor-log-manager \
         ${libdir}/libphosphor_logging.so.* \
 "
@@ -54,7 +54,7 @@ FILES_phosphor-rsyslog-config += " \
 "
 
 SRC_URI += "git://github.com/openbmc/phosphor-logging"
-SRCREV = "3b8ed7f2d3a93af5d27b549a934667f310412da4"
+SRCREV = "cbc93a49623dda187dd7dde4e0281ec0b8007a0e"
 
 S = "${WORKDIR}/git"
 
@@ -63,11 +63,12 @@ PACKAGECONFIG ??= ""
 PACKAGECONFIG[openpower-pels] = " \
         -Dopenpower-pel-extension=enabled, \
         -Dopenpower-pel-extension=disabled, \
-        nlohmann-json cli11 pldm, \
+        nlohmann-json cli11 pldm python3, \
         python3, \
         "
 
 EXTRA_OEMESON = " \
+        -Dtests=disabled \
         -Dyamldir=${STAGING_DIR_TARGET}${yaml_dir} \
         -Dcallout_yaml=${STAGING_DIR_NATIVE}${callouts_datadir}/callouts.yaml \
         "
