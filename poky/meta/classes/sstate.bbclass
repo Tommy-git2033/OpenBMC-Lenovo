@@ -123,8 +123,6 @@ SSTATE_HASHEQUIV_REPORT_TASKDATA[doc] = "Report additional useful data to the \
 python () {
     if bb.data.inherits_class('native', d):
         d.setVar('SSTATE_PKGARCH', d.getVar('BUILD_ARCH', False))
-        if d.getVar("PN") == "pseudo-native":
-            d.appendVar('SSTATE_PKGARCH', '_${ORIGNATIVELSBSTRING}')
     elif bb.data.inherits_class('crosssdk', d):
         d.setVar('SSTATE_PKGARCH', d.expand("${BUILD_ARCH}_${SDK_ARCH}_${SDK_OS}"))
     elif bb.data.inherits_class('cross', d):
@@ -483,7 +481,7 @@ def sstate_clean_cachefiles(d):
         ss = sstate_state_fromvars(ld, task)
         sstate_clean_cachefile(ss, ld)
 
-def sstate_clean_manifest(manifest, d, prefix=None):
+def sstate_clean_manifest(manifest, d, canrace=False, prefix=None):
     import oe.path
 
     mfile = open(manifest)
@@ -501,7 +499,9 @@ def sstate_clean_manifest(manifest, d, prefix=None):
             if entry.endswith("/"):
                 if os.path.islink(entry[:-1]):
                     os.remove(entry[:-1])
-                elif os.path.exists(entry) and len(os.listdir(entry)) == 0:
+                elif os.path.exists(entry) and len(os.listdir(entry)) == 0 and not canrace:
+                    # Removing directories whilst builds are in progress exposes a race. Only
+                    # do it in contexts where it is safe to do so.
                     os.rmdir(entry[:-1])
             else:
                 os.remove(entry)
@@ -539,7 +539,7 @@ def sstate_clean(ss, d):
         for lock in ss['lockfiles']:
             locks.append(bb.utils.lockfile(lock))
 
-        sstate_clean_manifest(manifest, d)
+        sstate_clean_manifest(manifest, d, canrace=True)
 
         for lock in locks:
             bb.utils.unlockfile(lock)
@@ -703,6 +703,11 @@ def sstate_package(ss, d):
             os.utime(siginfo, None)
         except PermissionError:
             pass
+        except OSError as e:
+            # Handle read-only file systems gracefully
+            import errno
+            if e.errno != errno.EROFS:
+                raise e
 
     return
 
@@ -966,12 +971,11 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
             tasklist.append((tid, sstatefile))
 
         if tasklist:
+            nproc = min(int(d.getVar("BB_NUMBER_THREADS")), len(tasklist))
+
             if len(tasklist) >= min_tasks:
                 msg = "Checking sstate mirror object availability"
                 bb.event.fire(bb.event.ProcessStarted(msg, len(tasklist)), d)
-
-            import multiprocessing
-            nproc = min(multiprocessing.cpu_count(), len(tasklist))
 
             bb.event.enable_threadlock()
             pool = oe.utils.ThreadedPool(nproc, len(tasklist),
@@ -1014,6 +1018,7 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
         bb.parse.siggen.checkhashes(sq_data, missed, found, d)
 
     return found
+setscene_depvalid[vardepsexclude] = "SSTATE_EXCLUDEDEPS_SYSROOT"
 
 BB_SETSCENE_DEPVALID = "setscene_depvalid"
 
@@ -1145,6 +1150,11 @@ python sstate_eventhandler() {
                 os.utime(siginfo, None)
             except PermissionError:
                 pass
+            except OSError as e:
+                # Handle read-only file systems gracefully
+                import errno
+                if e.errno != errno.EROFS:
+                    raise e
 
 }
 
